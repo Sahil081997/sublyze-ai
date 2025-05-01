@@ -28,3 +28,5 @@ streamlit
 moviepy
 ffmpeg-python
 srt
+imageio
+imageio-ffmpeg

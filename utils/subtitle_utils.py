@@ -1,14 +1,14 @@
 import srt
 from datetime import timedelta
 import os
-from moviepy.config import change_settings
+# from moviepy.config import change_settings
 from moviepy.editor import VideoFileClip, TextClip, CompositeVideoClip, ColorClip, ImageClip
 import numpy as np
 from PIL import Image, ImageDraw
 
-change_settings({
-    "IMAGEMAGICK_BINARY": r"C:\\Program Files\\ImageMagick-7.1.1-Q16-HDRI\\magick.exe"
-})
+# change_settings({
+#     "IMAGEMAGICK_BINARY": r"C:\\Program Files\\ImageMagick-7.1.1-Q16-HDRI\\magick.exe"
+# })
 
 def format_timestamp(seconds):
     return timedelta(seconds=float(seconds))
