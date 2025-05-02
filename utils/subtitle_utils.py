@@ -149,7 +149,8 @@ def create_subtitle_image(text, fontsize=24, font_color="#FFFFFF", bg_color="#00
     # Draw the text
     y_text = padding
     for line in text_lines:
-        text_width, _ = draw.textsize(line, font=font)
+        bbox = draw.textbbox((0, 0), line, font=font)
+        text_width = bbox[2] - bbox[0]
         x_text = (img_width - text_width) // 2
         draw.text((x_text, y_text), line, font=font, fill=font_color)
         y_text += line_height
