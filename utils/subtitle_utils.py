@@ -70,7 +70,7 @@ def burn_subtitles_to_video(
                 line,
                 fontsize=fontsize,
                 color=color,
-                font="Arial-Bold",
+                font="DejaVu-Sans",
                 method="pillow",
                 size=(int(video.w * 0.8), None),
                 align='center'
