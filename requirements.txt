@@ -30,3 +30,5 @@ ffmpeg-python
 srt
 imageio
 imageio-ffmpeg
+transformers
+torch
