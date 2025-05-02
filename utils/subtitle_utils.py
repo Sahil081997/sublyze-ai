@@ -71,7 +71,7 @@ def burn_subtitles_to_video(
                 fontsize=fontsize,
                 color=color,
                 font="Arial-Bold",
-                method="caption",
+                method="pillow",
                 size=(int(video.w * 0.8), None),
                 align='center'
             ).set_position(("center", position_y)).set_start(start).set_end(end)
