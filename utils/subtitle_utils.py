@@ -119,25 +119,27 @@ def burn_subtitles_to_video(video_path, chunks, fontsize=24, color="white", bg_c
         duration = end - start
 
         wrapped_text = textwrap.fill(text, width=40)
-
-        # Create text image with padding
         lines = wrapped_text.split('\n')
         line_height = font.getbbox('A')[3] - font.getbbox('A')[1] + 6
         padding_x = 30
         padding_y = 20
-        img_width = max(font.getbbox(line)[2] for line in lines) + 2 * padding_x
+        text_width = max(font.getbbox(line)[2] for line in lines)
+        img_width = text_width + 2 * padding_x
         img_height = line_height * len(lines) + 2 * padding_y
 
         img = Image.new("RGBA", (img_width, img_height), (0, 0, 0, 0))
         draw = ImageDraw.Draw(img)
 
-        # Rounded rectangle background
         radius = 20
         rect_color = tuple(int(bg_color.lstrip('#')[i:i+2], 16) for i in (0, 2, 4)) + (int(255 * bg_opacity),)
-        draw.rounded_rectangle([0, 0, img_width, img_height], radius=radius, fill=rect_color)
+        draw.rounded_rectangle([(0, 0), (img_width, img_height)], radius=radius, fill=rect_color)
 
         for i, line in enumerate(lines):
-            draw.text((padding_x, padding_y + i * line_height), line, font=font, fill=color)
+            line_bbox = font.getbbox(line)
+            line_width = line_bbox[2] - line_bbox[0]
+            x_text = (img_width - line_width) // 2
+            y_text = padding_y + i * line_height
+            draw.text((x_text, y_text), line, font=font, fill=color)
 
         np_img = np.array(img)
         txt_clip = (ImageClip(np_img, transparent=True)
