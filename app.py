@@ -154,8 +154,8 @@ if st.session_state.video_path and st.session_state.chunks:
         with open(st.session_state.burned_video_path, "rb") as f:
             st.download_button("📥 Download Video with Subtitles", f, file_name="sublyze_output.mp4", key="video_download_button")
 
-    st.sidebar.title("⚙️ Customization Panel")
-    st.session_state.active_tab = st.sidebar.radio("Choose Tab", ["Edit Subtitles", "Style Settings", "Translate Subtitles"], index=["Edit Subtitles", "Style Settings", "Translate Subtitles"].index(st.session_state.active_tab))
+    # st.sidebar.title("⚙️ Customization Panel")
+    # st.session_state.active_tab = st.sidebar.radio("Choose Tab", ["Edit Subtitles", "Style Settings", "Translate Subtitles"], index=["Edit Subtitles", "Style Settings", "Translate Subtitles"].index(st.session_state.active_tab))
 
     if st.session_state.active_tab == "Edit Subtitles":
         updated_chunks = []
