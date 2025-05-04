@@ -146,7 +146,7 @@ def burn_subtitles_to_video(video_path, chunks, fontsize=24, color="white", bg_c
         txt_clip = (ImageClip(np_img, transparent=True)
                     .set_duration(duration)
                     .set_start(start)
-                    .set_position(('center', 'bottom')))
+                    .set_position(('center', video.h - 160)))  # consistent position slightly above bottom
 
         clips.append(txt_clip)
 
