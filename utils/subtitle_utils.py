@@ -121,10 +121,11 @@ def burn_subtitles_to_video(video_path, chunks, fontsize=24, color="white", bg_c
         wrapped_text = textwrap.fill(text, width=40)
         lines = wrapped_text.split('\n')
         line_height = font.getbbox('A')[3] - font.getbbox('A')[1] + 6
-        padding_x = 30
-        padding_y = 20
-        text_width = max(font.getbbox(line)[2] for line in lines)
-        img_width = text_width + 2 * padding_x
+        padding_x = 20
+        padding_y = 16
+        text_widths = [font.getbbox(line)[2] - font.getbbox(line)[0] for line in lines]
+        max_line_width = max(text_widths)
+        img_width = max_line_width + 2 * padding_x
         img_height = line_height * len(lines) + 2 * padding_y
 
         img = Image.new("RGBA", (img_width, img_height), (0, 0, 0, 0))
