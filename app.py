@@ -243,66 +243,66 @@ if st.session_state.video_path and st.session_state.chunks:
         preview_style = f"<div style='padding: 10px; border-radius: 12px; background-color: {rgba_str}; color: {text_color}; font-size: {font_size}px; text-align: center;'> {preview_text} </div>"
         st.sidebar.markdown(preview_style, unsafe_allow_html=True)
 
-    elif st.session_state.active_tab == "Translate Subtitles":
-        st.sidebar.markdown("## 🌍 Translate Subtitles")
+    # elif st.session_state.active_tab == "Translate Subtitles":
+    #     st.sidebar.markdown("## 🌍 Translate Subtitles")
 
-        translation_languages = {
-            "English": "eng_Latn",   
-            "French": "fra_Latn",
-            "Spanish": "spa_Latn",
-            "German": "deu_Latn",
-            "Italian": "ita_Latn",
-            "Portuguese": "por_Latn",
-            "Chinese": "zho_Hans"
-        }
+    #     translation_languages = {
+    #         "English": "eng_Latn",   
+    #         "French": "fra_Latn",
+    #         "Spanish": "spa_Latn",
+    #         "German": "deu_Latn",
+    #         "Italian": "ita_Latn",
+    #         "Portuguese": "por_Latn",
+    #         "Chinese": "zho_Hans"
+    #     }
 
-        selected_lang = st.sidebar.selectbox("Select target language:", list(translation_languages.keys()))
+    #     selected_lang = st.sidebar.selectbox("Select target language:", list(translation_languages.keys()))
 
-        if st.sidebar.button("🌐 Translate and Reburn"):
-            with st.spinner("Translating subtitles and generating video..."):
-                try:
-                    model_name = "facebook/nllb-200-distilled-600M"
-                    tokenizer = AutoTokenizer.from_pretrained(model_name)
-                    model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
+    #     if st.sidebar.button("🌐 Translate and Reburn"):
+    #         with st.spinner("Translating subtitles and generating video..."):
+    #             try:
+    #                 model_name = "facebook/nllb-200-distilled-600M"
+    #                 tokenizer = AutoTokenizer.from_pretrained(model_name)
+    #                 model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
 
-                    tokenizer.src_lang = "eng_Latn"
-                    target_lang_code = translation_languages[selected_lang]
+    #                 tokenizer.src_lang = "eng_Latn"
+    #                 target_lang_code = translation_languages[selected_lang]
 
-                    # 🔥 This is the correct way!
-                    forced_bos_token_id = tokenizer.convert_tokens_to_ids(target_lang_code)
+    #                 # 🔥 This is the correct way!
+    #                 forced_bos_token_id = tokenizer.convert_tokens_to_ids(target_lang_code)
 
-                    translated_chunks = []
+    #                 translated_chunks = []
 
-                    for chunk in st.session_state.chunks:
-                        input_text = chunk["text"]
-                        inputs = tokenizer(input_text, return_tensors="pt", padding=True)
+    #                 for chunk in st.session_state.chunks:
+    #                     input_text = chunk["text"]
+    #                     inputs = tokenizer(input_text, return_tensors="pt", padding=True)
 
-                        outputs = model.generate(
-                            **inputs,
-                            forced_bos_token_id=forced_bos_token_id  # 👈 Force correct target language here
-                        )
+    #                     outputs = model.generate(
+    #                         **inputs,
+    #                         forced_bos_token_id=forced_bos_token_id  # 👈 Force correct target language here
+    #                     )
 
-                        translated_text = tokenizer.batch_decode(outputs, skip_special_tokens=True)[0]
+    #                     translated_text = tokenizer.batch_decode(outputs, skip_special_tokens=True)[0]
 
-                        translated_chunks.append({
-                            "timestamp": chunk["timestamp"],
-                            "text": translated_text
-                        })
+    #                     translated_chunks.append({
+    #                         "timestamp": chunk["timestamp"],
+    #                         "text": translated_text
+    #                     })
 
-                    st.session_state.chunks = translated_chunks
-                    new_burned_path = burn_subtitles_to_video(
-                        st.session_state.video_path,
-                        translated_chunks,
-                        fontsize=st.session_state.font_size,
-                        color=st.session_state.text_color,
-                        bg_color=st.session_state.bg_color,
-                        bg_opacity=st.session_state.bg_opacity
-                    )
-                    st.session_state.burned_video_path = new_burned_path
-                    st.success("✅ Subtitles translated and video updated!")
-                    st.rerun()
-                except Exception as e:
-                    st.error(f"⚠️ Translation failed: {e}")
+    #                 st.session_state.chunks = translated_chunks
+    #                 new_burned_path = burn_subtitles_to_video(
+    #                     st.session_state.video_path,
+    #                     translated_chunks,
+    #                     fontsize=st.session_state.font_size,
+    #                     color=st.session_state.text_color,
+    #                     bg_color=st.session_state.bg_color,
+    #                     bg_opacity=st.session_state.bg_opacity
+    #                 )
+    #                 st.session_state.burned_video_path = new_burned_path
+    #                 st.success("✅ Subtitles translated and video updated!")
+    #                 st.rerun()
+    #             except Exception as e:
+    #                 st.error(f"⚠️ Translation failed: {e}")
 
 
 
