@@ -31,3 +31,8 @@ No sign-up. No watermark. Completely free.
   - [Whisper](https://github.com/openai/whisper) (transcription)
 - **Languages**: Python 3.12+
 
+Product Requirements Documents:
+PRD: [PRD](https://stingy-calliandra-4d0.notion.site/PRD-Sublyze-AI-a-Subtitle-Generator-Project-1d0cdf18fad28045ad8fe58dba6a5fe9)
+User Journey Document: [User Journey Document](https://stingy-calliandra-4d0.notion.site/Sublyze-AI-User-Journey-Map-1d8cdf18fad2804caad2f8b692a429f9)
+Model card: [Model Card](https://stingy-calliandra-4d0.notion.site/Model-Card-Sublyze-1d2cdf18fad28034a1d8f5f12f588479)
+Data Spec Document: [Data Spec](https://stingy-calliandra-4d0.notion.site/Data-Spec-Document-1d8cdf18fad280be8545e597c70dcd74)
