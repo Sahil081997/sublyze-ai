@@ -106,10 +106,14 @@ def burn_subtitles_to_video(
     primary = _hex_to_ass_primary(color)
     back    = _hex_to_ass_back(bg_color, bg_opacity)
 
-    # Fontsize in ASS "script points" ≈ 1.6× CSS/pixel size for typical 1080p output
-    ass_fontsize = max(12, int(fontsize * 1.6))
+    # libass uses PlayResY=288 as the virtual canvas height for SRT files.
+    # Actual rendered pixel height = (Fontsize / 288) * video_height.
+    # For TV/Netflix-style subtitles (~38px at 1080p): Fontsize = 38*288/1080 ≈ 10.
+    # We map the user's slider (default 18) through a 0.55 factor to land near that.
+    ass_fontsize = max(6, round(fontsize * 0.55))
 
     # BorderStyle=4 → opaque background box   Alignment=2 → bottom-centre
+    # MarginV=10 → ~37px above bottom edge at 1080p (TV/Netflix positioning)
     force_style = (
         f"Fontsize={ass_fontsize},"
         f"PrimaryColour={primary},"
@@ -117,8 +121,7 @@ def burn_subtitles_to_video(
         f"BorderStyle=4,"
         f"Outline=0,Shadow=0,"
         f"Alignment=2,"
-        f"MarginV=30,"
-        f"Bold=1"
+        f"MarginV=10"
     )
 
     # Escape the SRT path for FFmpeg's subtitles filter:
@@ -132,7 +135,8 @@ def burn_subtitles_to_video(
         "-c:v", "libx264",
         "-preset", "fast",
         "-crf", "23",
-        "-c:a", "copy",
+        "-c:a", "aac",
+        "-b:a", "128k",
         output_path,
     ]
 
