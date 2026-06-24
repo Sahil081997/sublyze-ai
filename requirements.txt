@@ -1,9 +1,7 @@
-streamlit==1.33.0
-moviepy==1.0.3
+streamlit>=1.33.0
 ffmpeg-python==0.2.0
 srt==3.5.2
-numpy==1.26.4
-Pillow==10.2.0
-transformers==4.36.2
-torch==2.2.1
-sentencepiece==0.2.0
+transformers>=4.36.2
+torch>=2.2.1
+sentencepiece>=0.2.0
+accelerate>=0.26.0

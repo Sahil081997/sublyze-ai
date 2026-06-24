@@ -1,156 +1,147 @@
-# import os
-# import srt
-# import numpy as np
-# from PIL import Image, ImageDraw, ImageFont
-# from datetime import timedelta
-# from moviepy.editor import VideoFileClip, CompositeVideoClip, ImageClip
-# import tempfile
-# import textwrap
-
-# def generate_srt(chunks):
-#     subtitles = []
-#     for i, chunk in enumerate(chunks):
-#         start, end = chunk["timestamp"]
-#         subtitle = srt.Subtitle(index=i + 1,
-#                                  start=timedelta(seconds=start),
-#                                  end=timedelta(seconds=end),
-#                                  content=chunk["text"])
-#         subtitles.append(subtitle)
-#     return srt.compose(subtitles)
-
-# def save_srt(srt_text, filename="output.srt"):
-#     with open(filename, "w", encoding="utf-8") as f:
-#         f.write(srt_text)
-#     return filename
-
-# def create_subtitle_image(text, width, height, font_path, font_size, font_color, bg_color, bg_opacity):
-#     img_height = height // 6
-#     img_width = width
-#     image = Image.new("RGBA", (img_width, img_height), (0, 0, 0, 0))
-#     draw = ImageDraw.Draw(image)
-
-#     if bg_color:
-#         rgba_bg = Image.new("RGBA", image.size, bg_color + (int(255 * bg_opacity),))
-#         image = Image.alpha_composite(rgba_bg, image)
-#         draw = ImageDraw.Draw(image)
-
-#     try:
-#         font = ImageFont.truetype(font_path, font_size)
-#     except:
-#         font = ImageFont.load_default()
-
-#     # Wrap text to fit image width
-#     max_chars_per_line = 40
-#     wrapped_text = textwrap.wrap(text, width=max_chars_per_line)
-
-#     line_height = font_size + 10
-#     y_text = (img_height - line_height * len(wrapped_text)) // 2
-
-#     for line in wrapped_text:
-#         bbox = draw.textbbox((0, 0), line, font=font)
-#         text_width = bbox[2] - bbox[0]
-#         x_text = (img_width - text_width) // 2
-#         draw.text((x_text, y_text), line, font=font, fill=font_color)
-#         y_text += line_height
-
-#     return image
-
-# def burn_subtitles_to_video(video_path, chunks, fontsize=24, color="#FFFFFF", bg_color="#000000", bg_opacity=0.5):
-#     font_path = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
-#     video = VideoFileClip(video_path)
-#     subtitle_clips = []
-
-#     for chunk in chunks:
-#         start, end = chunk['timestamp']
-#         duration = end - start
-#         subtitle_img = create_subtitle_image(
-#             chunk['text'],
-#             video.w,
-#             video.h,
-#             font_path,
-#             fontsize,
-#             color,
-#             tuple(int(bg_color.lstrip('#')[i:i + 2], 16) for i in (0, 2, 4)),
-#             bg_opacity
-#         )
-#         with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp_img:
-#             subtitle_img.save(tmp_img.name)
-#             txt_clip = (ImageClip(tmp_img.name)
-#                         .set_duration(duration)
-#                         .set_start(start)
-#                         .set_position(("center", "bottom")))
-#             subtitle_clips.append(txt_clip)
-
-#     final = CompositeVideoClip([video] + subtitle_clips)
-#     output_path = "burned_output.mp4"
-#     final.write_videofile(output_path, codec="libx264", audio_codec="aac")
-#     return output_path
-
 import os
 import srt
-import numpy as np
-from PIL import Image, ImageDraw, ImageFont
-from moviepy.editor import VideoFileClip, CompositeVideoClip, ImageClip
+import subprocess
+import uuid
 from datetime import timedelta
-import textwrap
+
 
 def generate_srt(chunks):
+    """Convert Whisper timestamp chunks to SRT format.
+
+    Filters out chunks with missing, zero-length, or invalid timestamps so the
+    resulting SRT file is always well-formed and compatible with FFmpeg/libass.
+    """
     subtitles = []
-    for i, chunk in enumerate(chunks):
-        start = timedelta(seconds=chunk['timestamp'][0])
-        end = timedelta(seconds=chunk['timestamp'][1])
-        subtitles.append(srt.Subtitle(index=i, start=start, end=end, content=chunk['text']))
+    idx = 1
+    for chunk in chunks:
+        ts = chunk.get('timestamp', (None, None))
+        start_ts, end_ts = ts[0], ts[1]
+        if start_ts is None or end_ts is None:
+            continue
+        text = chunk.get('text', '').strip()
+        if not text:
+            continue
+        # Guard against zero-length segments
+        end_ts = max(float(end_ts), float(start_ts) + 0.5)
+        subtitles.append(srt.Subtitle(
+            index=idx,
+            start=timedelta(seconds=float(start_ts)),
+            end=timedelta(seconds=end_ts),
+            content=text,
+        ))
+        idx += 1
     return srt.compose(subtitles)
+
 
 def save_srt(srt_text, output_path="output_subtitles.srt"):
     with open(output_path, "w", encoding="utf-8") as f:
         f.write(srt_text)
     return output_path
 
-def burn_subtitles_to_video(video_path, chunks, fontsize=24, color="white", bg_color="#000000", bg_opacity=0.6):
-    video = VideoFileClip(video_path)
-    clips = [video]
-    font_path = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
-    font = ImageFont.truetype(font_path, fontsize)
 
-    for chunk in chunks:
-        text = chunk['text']
-        start, end = chunk['timestamp']
-        duration = end - start
+def _hex_to_ass_primary(hex_color):
+    """Convert #RRGGBB to ASS primary colour &H00BBGGRR."""
+    h = (hex_color or "#FFFFFF").lstrip('#')
+    h = h.ljust(6, '0')[:6]
+    r, g, b = int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
+    return f"&H00{b:02X}{g:02X}{r:02X}"
 
-        wrapped_text = textwrap.fill(text, width=40)
-        lines = wrapped_text.split('\n')
-        line_height = font.getbbox('A')[3] - font.getbbox('A')[1] + 6
-        padding_x = 10
-        padding_y = 8
-        text_widths = [font.getbbox(line)[2] - font.getbbox(line)[0] for line in lines]
-        max_line_width = max(text_widths)
-        img_width = max_line_width + 2 * padding_x
-        img_height = line_height * len(lines) + 2 * padding_y
 
-        img = Image.new("RGBA", (img_width, img_height), (0, 0, 0, 0))
-        draw = ImageDraw.Draw(img)
+def _hex_to_ass_back(hex_color, opacity):
+    """Convert #RRGGBB + opacity (0–1) to ASS back colour &HAABBGGRR."""
+    h = (hex_color or "#000000").lstrip('#')
+    h = h.ljust(6, '0')[:6]
+    r, g, b = int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
+    alpha = max(0, min(255, int((1.0 - float(opacity)) * 255)))
+    return f"&H{alpha:02X}{b:02X}{g:02X}{r:02X}"
 
-        radius = 20
-        rect_color = tuple(int(bg_color.lstrip('#')[i:i+2], 16) for i in (0, 2, 4)) + (int(255 * bg_opacity),)
-        draw.rounded_rectangle([(0, 0), (img_width, img_height)], radius=radius, fill=rect_color)
 
-        for i, line in enumerate(lines):
-            line_bbox = font.getbbox(line)
-            line_width = line_bbox[2] - line_bbox[0]
-            x_text = (img_width - line_width) // 2
-            y_text = padding_y + i * line_height
-            draw.text((x_text, y_text), line, font=font, fill=color)
+def burn_subtitles_to_video(
+    video_path, chunks,
+    fontsize=24, color="#FFFFFF",
+    bg_color="#000000", bg_opacity=0.6,
+    session_id=None,
+):
+    """Burn subtitles into a video using FFmpeg's native subtitles filter (libass).
 
-        np_img = np.array(img)
-        txt_clip = (ImageClip(np_img, transparent=True)
-                    .set_duration(duration)
-                    .set_start(start)
-                    .set_position(('center', video.h - 120)))  # consistent position slightly above bottom
+    This replaces the old MoviePy + PIL approach, which was:
+      • Slow   — PIL renders every frame in Python
+      • Brittle — hardcoded Linux font path, NoneType crash on bg_color=None
+      • Wrong  — shared 'burned_output.mp4' path caused race conditions
 
-        clips.append(txt_clip)
+    The FFmpeg subtitles filter is battle-tested, GPU-friendly, and handles all
+    edge cases (wrapping, unicode, RTL) natively via libass.
 
-    final = CompositeVideoClip(clips)
-    output_path = "burned_output.mp4"
-    final.write_videofile(output_path, codec="libx264", audio_codec="aac")
+    Pipeline:
+      1. Write chunks → temporary per-session SRT file
+      2. Build ASS force_style string from hex colours + opacity
+      3. Run: ffmpeg -vf subtitles='file.srt':force_style='...' -c:v libx264 ...
+      4. Return path to the per-session burned MP4
+
+    Args:
+        video_path:  Absolute path to the source video.
+        chunks:      List of {'timestamp': (start, end), 'text': str} from Whisper.
+        fontsize:    Subtitle font size (display points).
+        color:       Hex string for text colour, e.g. '#FFFFFF'.
+        bg_color:    Hex string for background box, e.g. '#000000'.
+        bg_opacity:  Float 0–1 for background opacity (0 = transparent).
+        session_id:  Short string used to name temp/output files uniquely.
+
+    Returns:
+        Absolute path to the burned MP4 file.
+
+    Raises:
+        RuntimeError: If FFmpeg exits non-zero.
+    """
+    if session_id is None:
+        session_id = uuid.uuid4().hex[:12]
+
+    os.makedirs("data", exist_ok=True)
+
+    srt_text = generate_srt(chunks)
+    srt_path = os.path.abspath(os.path.join("data", f"subs_{session_id}.srt"))
+    output_path = os.path.abspath(os.path.join("data", f"burned_{session_id}.mp4"))
+    save_srt(srt_text, srt_path)
+
+    primary = _hex_to_ass_primary(color)
+    back    = _hex_to_ass_back(bg_color, bg_opacity)
+
+    # Fontsize in ASS "script points" ≈ 1.6× CSS/pixel size for typical 1080p output
+    ass_fontsize = max(12, int(fontsize * 1.6))
+
+    # BorderStyle=4 → opaque background box   Alignment=2 → bottom-centre
+    force_style = (
+        f"Fontsize={ass_fontsize},"
+        f"PrimaryColour={primary},"
+        f"BackColour={back},"
+        f"BorderStyle=4,"
+        f"Outline=0,Shadow=0,"
+        f"Alignment=2,"
+        f"MarginV=30,"
+        f"Bold=1"
+    )
+
+    # Escape the SRT path for FFmpeg's subtitles filter:
+    # backslashes → forward slashes, then escape any remaining colons
+    srt_filter_path = srt_path.replace('\\', '/').replace(':', '\\:')
+
+    cmd = [
+        "ffmpeg", "-y",
+        "-i", video_path,
+        "-vf", f"subtitles='{srt_filter_path}':force_style='{force_style}'",
+        "-c:v", "libx264",
+        "-preset", "fast",
+        "-crf", "23",
+        "-c:a", "copy",
+        output_path,
+    ]
+
+    result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
+
+    if result.returncode != 0:
+        raise RuntimeError(
+            f"FFmpeg subtitle burn failed (exit {result.returncode}).\n\n"
+            f"stderr (last 2 000 chars):\n{result.stderr[-2000:]}"
+        )
+
     return output_path

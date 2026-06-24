@@ -1,5 +1,5 @@
 ffmpeg
-imagemagick
+fonts-open-sans
 libsm6
 libxext6
 libgl1

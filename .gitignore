@@ -1,0 +1,25 @@
+# ── Generated / temp files ────────────────────────────────────────────────────
+data/
+*.wav
+burned_output.mp4
+sublyze_subtitled.mp4
+output_subtitles.srt
+output.srt
+output.vtt
+
+# ── Python ────────────────────────────────────────────────────────────────────
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
+venv/
+.venv/
+env/
+
+# ── Streamlit ────────────────────────────────────────────────────────────────
+.streamlit/secrets.toml
+
+# ── OS ────────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
