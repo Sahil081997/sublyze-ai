@@ -257,6 +257,7 @@ def _init_session():
         # pipeline
         "steps": {k: False for k in ["upload","extract","transcribe","subtitle","burn"]},
         "stats": {},
+        "uploaded_file_id": None,
         "page": "✂️ Editor",
     }
     for k, v in defaults.items():
@@ -813,6 +814,28 @@ pipeline_ph = st.empty()
 if any(st.session_state.steps.values()):
     pipeline_ph.markdown(_pipeline_html(), unsafe_allow_html=True)
 
+# ── Detect file change or removal and reset pipeline ─────────────────────────
+def _reset_pipeline():
+    """Reset pipeline state while preserving style preferences and page."""
+    for k in ["video_path","audio_path","srt_path","srt_content",
+              "chunks","transcript","burned_video_path","uploaded_file_id"]:
+        st.session_state[k] = None
+    st.session_state.stats = {}
+    st.session_state.steps = {k: False for k in ["upload","extract","transcribe","subtitle","burn"]}
+
+_new_fid = f"{uploaded_file.name}:{uploaded_file.size}" if uploaded_file else None
+
+if uploaded_file is None and st.session_state.steps["upload"]:
+    # User removed the file — wipe pipeline so uploader is ready for next upload
+    _reset_pipeline()
+    st.rerun()
+
+if (uploaded_file and st.session_state.steps["upload"]
+        and _new_fid != st.session_state.uploaded_file_id):
+    # User swapped to a different file — reset and reprocess
+    _reset_pipeline()
+    st.rerun()
+
 # ── Processing pipeline ───────────────────────────────────────────────────────
 if uploaded_file and not st.session_state.steps["upload"]:
     file_ext = os.path.splitext(uploaded_file.name)[-1][1:].lower()
@@ -827,6 +850,7 @@ if uploaded_file and not st.session_state.steps["upload"]:
 
     video_path = save_uploaded_file(uploaded_file)
     st.session_state.video_path = video_path
+    st.session_state.uploaded_file_id = _new_fid
     st.session_state.steps["upload"] = True
     pipeline_ph.markdown(_pipeline_html(), unsafe_allow_html=True)
 
