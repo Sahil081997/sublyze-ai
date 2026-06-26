@@ -228,7 +228,7 @@ video { border-radius:14px !important; box-shadow:0 20px 56px rgba(0,0,0,.6) !im
 .sb-footer-text { font-size:.72rem; color:#34d399 !important; font-weight:600; }
 .sb-version { font-size:.6rem; color:#2a2a44 !important; margin-top:8px; text-align:center; }
 @keyframes pulse-dot { 0%,100%{opacity:1;}50%{opacity:.4;} }
-.footer { text-align:center; padding:24px 0 10px; border-top:1px solid rgba(255,255,255,.05); margin-top:48px; color:#303050 !important; font-size:.78rem; }
+.footer { text-align:center; padding:24px 0 10px; border-top:1px solid rgba(255,255,255,.05); margin-top:48px; color:#a0a0c0 !important; font-size:.78rem; }
 .footer a { color:#667eea !important; text-decoration:none; }
 ::-webkit-scrollbar { width:5px; background:transparent; }
 ::-webkit-scrollbar-thumb { background:rgba(102,126,234,.3); border-radius:3px; }
