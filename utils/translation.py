@@ -1,72 +1,70 @@
-from deep_translator import GoogleTranslator
+import json
+import time
+import urllib.parse
+import urllib.request
 
 # Languages users actually care about, ordered by global usage
 TRANSLATION_LANGUAGES = {
-    "🇪🇸 Spanish":            "es",
-    "🇫🇷 French":             "fr",
-    "🇩🇪 German":             "de",
-    "🇧🇷 Portuguese":         "pt",
-    "🇮🇳 Hindi":              "hi",
-    "🇨🇳 Chinese (Simplified)": "zh-CN",
-    "🇯🇵 Japanese":           "ja",
-    "🇰🇷 Korean":             "ko",
-    "🇸🇦 Arabic":             "ar",
-    "🇮🇹 Italian":            "it",
-    "🇷🇺 Russian":            "ru",
-    "🇳🇱 Dutch":              "nl",
-    "🇹🇷 Turkish":            "tr",
-    "🇵🇱 Polish":             "pl",
-    "🇸🇪 Swedish":            "sv",
-    "🇮🇩 Indonesian":         "id",
-    "🇵🇭 Filipino":           "tl",
-    "🇻🇳 Vietnamese":         "vi",
-    "🇹🇭 Thai":               "th",
-    "🇬🇷 Greek":              "el",
-    "🇮🇱 Hebrew":             "iw",
-    "🇺🇦 Ukrainian":          "uk",
+    "🇪🇸 Spanish":               "es",
+    "🇫🇷 French":                "fr",
+    "🇩🇪 German":                "de",
+    "🇧🇷 Portuguese":            "pt",
+    "🇮🇳 Hindi":                 "hi",
+    "🇨🇳 Chinese (Simplified)":  "zh-CN",
+    "🇯🇵 Japanese":              "ja",
+    "🇰🇷 Korean":                "ko",
+    "🇸🇦 Arabic":                "ar",
+    "🇮🇹 Italian":               "it",
+    "🇷🇺 Russian":               "ru",
+    "🇳🇱 Dutch":                 "nl",
+    "🇹🇷 Turkish":               "tr",
+    "🇵🇱 Polish":                "pl",
+    "🇸🇪 Swedish":               "sv",
+    "🇮🇩 Indonesian":            "id",
+    "🇵🇭 Filipino":              "tl",
+    "🇻🇳 Vietnamese":            "vi",
+    "🇹🇭 Thai":                  "th",
+    "🇬🇷 Greek":                 "el",
+    "🇮🇱 Hebrew":                "iw",
+    "🇺🇦 Ukrainian":             "uk",
 }
 
-_DELIMITER = "\n<|>\n"
 _BATCH_SIZE = 15
+_HEADERS = {"User-Agent": "Mozilla/5.0"}
+
+
+def _google_translate(text: str, target: str) -> str:
+    """Call Google Translate's free endpoint with stdlib urllib only."""
+    url = (
+        "https://translate.googleapis.com/translate_a/single"
+        f"?client=gtx&sl=auto&tl={target}&dt=t&q={urllib.parse.quote(text)}"
+    )
+    req = urllib.request.Request(url, headers=_HEADERS)
+    with urllib.request.urlopen(req, timeout=15) as resp:
+        data = json.loads(resp.read())
+    return "".join(part[0] for part in data[0] if part[0])
 
 
 def translate_chunks(chunks: list, target_lang_code: str) -> list:
-    """Translate subtitle chunks to target language using Google Translate.
+    """Translate subtitle chunks to target language.
 
-    Batches multiple segments into a single API call (separated by a
-    distinctive delimiter) to minimise latency and request count.
-    Falls back to the original text for any segment that fails.
+    Translates each segment individually. Uses stdlib urllib — no extra
+    packages required. Falls back to the original text on any error.
     """
     if not chunks:
         return chunks
 
-    texts = [c.get("text", "").strip() for c in chunks]
-    translated_texts = list(texts)  # start as copy, overwrite on success
+    translated = []
+    for i, chunk in enumerate(chunks):
+        text = chunk.get("text", "").strip()
+        if text:
+            try:
+                text = _google_translate(text, target_lang_code)
+                if i < len(chunks) - 1:
+                    time.sleep(0.05)   # gentle rate-limit
+            except Exception:
+                pass  # keep original on failure
+        translated.append({"timestamp": chunk["timestamp"], "text": text})
 
-    translator = GoogleTranslator(source="auto", target=target_lang_code)
+    return translated
 
-    for i in range(0, len(texts), _BATCH_SIZE):
-        batch = texts[i : i + _BATCH_SIZE]
-        joined = _DELIMITER.join(batch)
-        try:
-            result = translator.translate(joined) or joined
-            parts = result.split("<|>")
-            parts = [p.strip() for p in parts]
-            # Guard against translator collapsing/expanding delimiters
-            if len(parts) == len(batch):
-                for j, part in enumerate(parts):
-                    translated_texts[i + j] = part or batch[j]
-            else:
-                # Fallback: translate each segment individually
-                for j, text in enumerate(batch):
-                    try:
-                        translated_texts[i + j] = translator.translate(text) or text
-                    except Exception:
-                        pass  # keep original
-        except Exception:
-            pass  # keep originals for this batch
-
-    return [
-        {"timestamp": c["timestamp"], "text": t}
-        for c, t in zip(chunks, translated_texts)
-    ]
