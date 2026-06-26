@@ -25,8 +25,9 @@ st.markdown("""<style>
 }
 [data-testid="stHeader"]          { background:transparent !important; }
 [data-testid="stSidebar"]>div:first-child {
-    background:rgba(10,10,25,0.98) !important;
-    border-right:1px solid rgba(102,126,234,0.12);
+    background:rgba(8,8,20,0.99) !important;
+    border-right:1px solid rgba(102,126,234,0.10);
+    padding:0 !important;
 }
 h1,h2,h3,h4 { color:#f0f0ff !important; }
 
@@ -135,6 +136,93 @@ video { border-radius:14px !important; box-shadow:0 20px 56px rgba(0,0,0,.6) !im
 .stTextArea textarea:focus { border-color:rgba(102,126,234,.5) !important; }
 [data-testid="stSidebar"] h1,[data-testid="stSidebar"] h2,[data-testid="stSidebar"] h3 { color:#d0d0f0 !important; }
 [data-testid="stSidebar"] p,[data-testid="stSidebar"] label { color:#8080a0 !important; }
+
+/* ── Sidebar brand ── */
+.sb-brand {
+    padding:28px 20px 20px;
+    border-bottom:1px solid rgba(102,126,234,0.10);
+    margin-bottom:8px;
+}
+.sb-logo {
+    display:flex; align-items:center; gap:10px; margin-bottom:4px;
+}
+.sb-logo-icon {
+    width:36px; height:36px; border-radius:10px;
+    background:linear-gradient(135deg,#667eea,#a855f7);
+    display:flex; align-items:center; justify-content:center;
+    font-size:1.1rem; flex-shrink:0;
+    box-shadow:0 4px 14px rgba(102,126,234,0.4);
+}
+.sb-logo-name {
+    font-size:1.1rem; font-weight:800; letter-spacing:-.01em;
+    background:linear-gradient(90deg,#c0c8ff,#d8b4fe);
+    -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+    background-clip:text;
+}
+.sb-logo-tag {
+    font-size:.62rem; color:#3a3a5a !important;
+    text-transform:uppercase; letter-spacing:.08em; padding-left:46px;
+}
+
+/* ── Sidebar nav section label ── */
+.sb-nav-label {
+    font-size:.6rem; font-weight:700; text-transform:uppercase;
+    letter-spacing:.1em; color:#2e2e4e !important;
+    padding:6px 20px 4px;
+}
+
+/* ── Sidebar nav buttons ── */
+[data-testid="stSidebar"] .stButton > button {
+    background:transparent !important;
+    border:none !important;
+    border-radius:10px !important;
+    color:#6060a0 !important;
+    font-weight:600 !important;
+    font-size:.88rem !important;
+    text-align:left !important;
+    padding:10px 14px !important;
+    width:100% !important;
+    transition:background .15s,color .15s !important;
+    box-shadow:none !important;
+    transform:none !important;
+}
+[data-testid="stSidebar"] .stButton > button:hover {
+    background:rgba(102,126,234,0.08) !important;
+    color:#c0c8ff !important;
+    transform:none !important;
+    box-shadow:none !important;
+}
+
+/* Active nav item — injected via wrapper div with data-active */
+.nav-item-active > div > button,
+.nav-item-active .stButton > button {
+    background:rgba(102,126,234,0.14) !important;
+    color:#c0c8ff !important;
+    border-left:3px solid #667eea !important;
+    padding-left:11px !important;
+}
+
+/* ── Sidebar divider ── */
+.sb-divider {
+    border:none; border-top:1px solid rgba(255,255,255,0.05);
+    margin:12px 16px;
+}
+
+/* ── Sidebar footer ── */
+.sb-footer {
+    position:absolute; bottom:0; left:0; right:0;
+    padding:16px 20px;
+    border-top:1px solid rgba(255,255,255,0.04);
+}
+.sb-footer-badge {
+    display:flex; align-items:center; gap:8px;
+    background:rgba(52,211,153,0.07); border:1px solid rgba(52,211,153,0.15);
+    border-radius:8px; padding:8px 10px;
+}
+.sb-footer-dot { width:6px;height:6px;border-radius:50%;background:#34d399;flex-shrink:0;animation:pulse-dot 2s ease-in-out infinite; }
+.sb-footer-text { font-size:.72rem; color:#34d399 !important; font-weight:600; }
+.sb-version { font-size:.6rem; color:#2a2a44 !important; margin-top:8px; text-align:center; }
+@keyframes pulse-dot { 0%,100%{opacity:1;}50%{opacity:.4;} }
 .footer { text-align:center; padding:24px 0 10px; border-top:1px solid rgba(255,255,255,.05); margin-top:48px; color:#303050 !important; font-size:.78rem; }
 .footer a { color:#667eea !important; text-decoration:none; }
 ::-webkit-scrollbar { width:5px; background:transparent; }
@@ -164,6 +252,7 @@ def _init_session():
         # pipeline
         "steps": {k: False for k in ["upload","extract","transcribe","subtitle","burn"]},
         "stats": {},
+        "page": "✂️ Editor",
     }
     for k, v in defaults.items():
         if k not in st.session_state:
@@ -243,31 +332,248 @@ def _do_burn():
 
 # ── Sidebar (navigation only) ─────────────────────────────────────────────────
 with st.sidebar:
-    st.markdown("## 🎬 Sublyze AI")
-    page = st.radio("", ["✂️ Editor","🔒 Privacy"], label_visibility="collapsed")
+    # ── Brand ────────────────────────────────────────────────────────────────
+    st.markdown("""
+<div class="sb-brand">
+  <div class="sb-logo">
+    <div class="sb-logo-icon">🎬</div>
+    <div class="sb-logo-name">Sublyze AI</div>
+  </div>
+  <div class="sb-logo-tag">Auto Subtitle Generator</div>
+</div>
+<div class="sb-nav-label">Menu</div>
+""", unsafe_allow_html=True)
+
+    # ── Nav buttons ───────────────────────────────────────────────────────────
+    nav_items = [
+        ("✂️ Editor",  "✂️",  "Editor",  "Create & style subtitles"),
+        ("🔒 Privacy", "🔒", "Privacy", "How we handle your data"),
+    ]
+    for page_key, icon, label, desc in nav_items:
+        is_active = st.session_state.page == page_key
+        active_cls = "nav-item-active" if is_active else ""
+        st.markdown(f'<div class="{active_cls}">', unsafe_allow_html=True)
+        if st.button(
+            f"{icon}  {label}",
+            key=f"nav_{page_key}",
+            use_container_width=True,
+        ):
+            st.session_state.page = page_key
+            st.rerun()
+        st.markdown("</div>", unsafe_allow_html=True)
+
+    # ── Footer ────────────────────────────────────────────────────────────────
+    st.markdown("<hr class='sb-divider'>", unsafe_allow_html=True)
+    st.markdown("""
+<div class="sb-footer-badge">
+  <div class="sb-footer-dot"></div>
+  <span class="sb-footer-text">Whisper AI · Online</span>
+</div>
+<div class="sb-version">v2.0 · Streamlit Cloud</div>
+""", unsafe_allow_html=True)
+
+page = st.session_state.page
 
 
 # ── Privacy ───────────────────────────────────────────────────────────────────
 if page == "🔒 Privacy":
-    st.markdown("## 🔐 Privacy & Data Handling")
     st.markdown("""
-**How Sublyze AI processes your video:**
+<style>
+/* Privacy page extras */
+.privacy-hero { text-align:center; padding:40px 0 28px; }
+.privacy-hero-title {
+    font-size:clamp(1.8rem,4vw,2.8rem); font-weight:900;
+    background:linear-gradient(90deg,#667eea 0%,#a855f7 50%,#ec4899 100%);
+    -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+    background-clip:text; line-height:1.2; margin:0 0 10px;
+}
+.privacy-hero-sub { color:#7070a0 !important; font-size:1rem; }
 
-- Your video is uploaded temporarily to our processing server
-- Audio is extracted and transcribed on-server using OpenAI Whisper (self-hosted, open-source)
-- Temporary files (WAV, SRT, burned MP4) are session-scoped and not persisted
-- We do **not** store, share, or train on your videos
+.tldr-box {
+    background:linear-gradient(135deg,rgba(102,126,234,.12),rgba(168,85,247,.08));
+    border:1px solid rgba(102,126,234,.3); border-radius:18px;
+    padding:28px 32px; margin:0 0 36px; position:relative;
+}
+.tldr-tag {
+    display:inline-block; background:linear-gradient(135deg,#667eea,#a855f7);
+    color:#fff; font-size:.72rem; font-weight:800; letter-spacing:.08em;
+    padding:4px 12px; border-radius:100px; text-transform:uppercase; margin-bottom:12px;
+}
+.tldr-headline {
+    font-size:1.5rem; font-weight:800; color:#e0e0ff !important; margin:0 0 8px;
+}
+.tldr-body { color:#9090b8 !important; font-size:.95rem; line-height:1.65; margin:0; }
 
-| Component | Tool |
-|---|---|
-| 🤖 Transcription | OpenAI Whisper (open-source, self-hosted) |
-| 🎬 Video processing | FFmpeg (libass subtitle filter) |
-| 📝 Subtitle format | SRT (open standard) |
-| 🚀 Hosting | Streamlit Cloud |
+.priv-section-title {
+    font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.09em;
+    color:#667eea !important; border-bottom:1px solid rgba(102,126,234,.2);
+    padding-bottom:8px; margin:36px 0 16px;
+}
 
-> Processing runs on the server — not in your browser.
-> Your data is handled securely and is never persisted beyond your session.
-""")
+.priv-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:14px; margin:0 0 10px; }
+.priv-card {
+    background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.07);
+    border-radius:16px; padding:22px 20px; transition:.2s;
+}
+.priv-card:hover { border-color:rgba(102,126,234,.3); transform:translateY(-2px); }
+.priv-card-icon { font-size:1.8rem; margin-bottom:10px; }
+.priv-card-title { font-size:.9rem; font-weight:700; color:#d0d0f0 !important; margin-bottom:6px; }
+.priv-card-body  { font-size:.8rem; color:#5a5a80 !important; line-height:1.55; }
+
+.priv-fact-row { display:flex; flex-direction:column; gap:10px; margin:0 0 8px; }
+.priv-fact {
+    display:flex; align-items:flex-start; gap:12px;
+    background:rgba(255,255,255,.025); border:1px solid rgba(255,255,255,.05);
+    border-radius:12px; padding:14px 16px;
+}
+.priv-fact-icon { font-size:1.2rem; flex-shrink:0; margin-top:1px; }
+.priv-fact-text { font-size:.85rem; color:#8080a0 !important; line-height:1.5; }
+.priv-fact-text b { color:#c0c0e0 !important; }
+
+.tech-table { width:100%; border-collapse:collapse; margin:0 0 8px; }
+.tech-table th {
+    text-align:left; font-size:.65rem; text-transform:uppercase; letter-spacing:.08em;
+    color:#505075 !important; padding:8px 12px; border-bottom:1px solid rgba(255,255,255,.07);
+}
+.tech-table td { padding:12px 12px; border-bottom:1px solid rgba(255,255,255,.04); font-size:.83rem; color:#9090b0 !important; }
+.tech-table tr:last-child td { border-bottom:none; }
+.tech-table td:first-child { color:#c0c0e0 !important; font-weight:600; }
+.tech-badge {
+    display:inline-block; padding:3px 9px; border-radius:6px; font-size:.7rem; font-weight:700;
+    background:rgba(52,211,153,.12); border:1px solid rgba(52,211,153,.25); color:#6ee7b7 !important;
+}
+
+.no-badge {
+    background:rgba(239,68,68,.1); border:1px solid rgba(239,68,68,.25); color:#f87171 !important;
+    display:inline-block; padding:3px 9px; border-radius:6px; font-size:.7rem; font-weight:700;
+}
+</style>
+""", unsafe_allow_html=True)
+
+    # Hero
+    st.markdown("""
+<div class="privacy-hero">
+  <div class="privacy-hero-title">🔐 Privacy Policy</div>
+  <div class="privacy-hero-sub">Last updated · June 2025</div>
+</div>
+""", unsafe_allow_html=True)
+
+    # TL;DR
+    st.markdown("""
+<div class="tldr-box">
+  <div class="tldr-tag">tl;dr</div>
+  <div class="tldr-headline">Your video stays yours. We never store it.</div>
+  <p class="tldr-body">
+    Sublyze AI processes your video <strong style="color:#c0c0e0">entirely on our server</strong> for the duration of your session —
+    audio extraction, transcription, and subtitle burning all happen there.
+    Once you close your session, every temporary file is discarded.
+    We do <strong style="color:#c0c0e0">not</strong> sell your data, train models on your content, or share anything with third parties.
+  </p>
+</div>
+""", unsafe_allow_html=True)
+
+    # What happens to your file
+    st.markdown('<div class="priv-section-title">What happens to your file</div>', unsafe_allow_html=True)
+    st.markdown("""
+<div class="priv-fact-row">
+  <div class="priv-fact">
+    <span class="priv-fact-icon">📤</span>
+    <span class="priv-fact-text"><b>Upload</b> — your video is written to a temporary, session-scoped folder on the server. It is never indexed, logged by filename, or linked to your identity.</span>
+  </div>
+  <div class="priv-fact">
+    <span class="priv-fact-icon">🔊</span>
+    <span class="priv-fact-text"><b>Audio extraction</b> — FFmpeg strips a mono 16 kHz WAV track from your video. Only this audio file is fed to the transcription model — the original video is not read again.</span>
+  </div>
+  <div class="priv-fact">
+    <span class="priv-fact-icon">🧠</span>
+    <span class="priv-fact-text"><b>Transcription</b> — OpenAI Whisper runs <em>locally on our server</em>. Your audio is never sent to OpenAI's API or any external service. No API key, no cloud call.</span>
+  </div>
+  <div class="priv-fact">
+    <span class="priv-fact-icon">🔥</span>
+    <span class="priv-fact-text"><b>Subtitle burn</b> — FFmpeg re-encodes the video with subtitles burned in. The result is made available only to you via your browser session.</span>
+  </div>
+  <div class="priv-fact">
+    <span class="priv-fact-icon">🗑️</span>
+    <span class="priv-fact-text"><b>Cleanup</b> — all temporary files (WAV, SRT, burned MP4) are session-scoped and removed when no longer needed. Nothing is retained after your session ends.</span>
+  </div>
+</div>
+""", unsafe_allow_html=True)
+
+    # What we do NOT do
+    st.markdown('<div class="priv-section-title">What we never do</div>', unsafe_allow_html=True)
+    st.markdown("""
+<div class="priv-grid">
+  <div class="priv-card">
+    <div class="priv-card-icon">🚫</div>
+    <div class="priv-card-title">No storage</div>
+    <div class="priv-card-body">We do not persist your videos, transcripts, or subtitles to any database or long-term storage.</div>
+  </div>
+  <div class="priv-card">
+    <div class="priv-card-icon">🤐</div>
+    <div class="priv-card-title">No sharing</div>
+    <div class="priv-card-body">Your content is never sold to, shared with, or accessible by any third party.</div>
+  </div>
+  <div class="priv-card">
+    <div class="priv-card-icon">🧬</div>
+    <div class="priv-card-title">No model training</div>
+    <div class="priv-card-body">Your audio and transcripts are never used to fine-tune, retrain, or improve any AI model.</div>
+  </div>
+  <div class="priv-card">
+    <div class="priv-card-icon">🔍</div>
+    <div class="priv-card-title">No tracking</div>
+    <div class="priv-card-body">We do not track individual users, link sessions to identities, or build usage profiles.</div>
+  </div>
+</div>
+""", unsafe_allow_html=True)
+
+    # Tech stack
+    st.markdown('<div class="priv-section-title">Technology stack</div>', unsafe_allow_html=True)
+    st.markdown("""
+<table class="tech-table">
+  <thead>
+    <tr>
+      <th>Component</th><th>Tool</th><th>Data leaves server?</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>🧠 Transcription</td>
+      <td>OpenAI Whisper (open-source, self-hosted)</td>
+      <td><span class="tech-badge">✓ Never</span></td>
+    </tr>
+    <tr>
+      <td>🎬 Video processing</td>
+      <td>FFmpeg · libass subtitle filter</td>
+      <td><span class="tech-badge">✓ Never</span></td>
+    </tr>
+    <tr>
+      <td>📝 Subtitle format</td>
+      <td>SRT (open standard)</td>
+      <td><span class="tech-badge">✓ Never</span></td>
+    </tr>
+    <tr>
+      <td>🚀 Hosting</td>
+      <td>Streamlit Cloud</td>
+      <td><span class="tech-badge">✓ Server-local only</span></td>
+    </tr>
+  </tbody>
+</table>
+""", unsafe_allow_html=True)
+
+    # Contact
+    st.markdown('<div class="priv-section-title">Questions?</div>', unsafe_allow_html=True)
+    st.markdown("""
+<div class="priv-fact">
+  <span class="priv-fact-icon">💬</span>
+  <span class="priv-fact-text">
+    If you have any privacy-related questions or concerns, open an issue or start a discussion on
+    <a href="https://github.com/Sahil081997/sublyze-ai" target="_blank" style="color:#667eea;text-decoration:none">GitHub ↗</a>.
+    We're committed to being transparent about how your data is handled.
+  </span>
+</div>
+""", unsafe_allow_html=True)
+
+    st.markdown("<div style='margin-top:48px'></div>", unsafe_allow_html=True)
     st.stop()
 
 
