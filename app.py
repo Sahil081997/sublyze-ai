@@ -1165,37 +1165,29 @@ if st.session_state.steps["burn"] and st.session_state.burned_video_path:
             st.markdown(
                 "<small style='color:#505075'>Edit any segment below, then click "
                 "<b>Re-burn with Edits</b>. "
-                "🟢 = good length  🟡 = short  🔴 = very short</small>",
+                "🟢 ≥1.5s &nbsp; 🟡 ≥0.8s &nbsp; 🔴 &lt;0.8s</small>",
                 unsafe_allow_html=True,
             )
 
         updated_chunks, edited = [], False
-        for i, chunk in enumerate(st.session_state.chunks):
-            s, e   = chunk["timestamp"]
-            dur    = e - s
-            dur_cls = "seg-dur-ok" if dur >= 1.5 else ("seg-dur-short" if dur >= 0.8 else "seg-dur-vshort")
-            chars  = len(chunk["text"])
 
-            st.markdown(
-                f"<div class='seg-header'>"
-                f"<span class='seg-num'>#{i+1}</span>"
-                f"<span class='seg-time'>{fmt_dur(s)} → {fmt_dur(e)}</span>"
-                f"<span class='seg-dur {dur_cls}'>{dur:.1f}s</span>"
-                f"<span class='seg-chars'>{chars} chars</span>"
-                f"</div>",
-                unsafe_allow_html=True,
-            )
-            new_text = st.text_area(
-                label=" ", value=chunk["text"], height=60,
-                key=f"seg_{i}_{st.session_state.session_id}",
-                label_visibility="collapsed",
-            )
-            if new_text.strip() != chunk["text"].strip():
-                edited = True
-            updated_chunks.append({"timestamp": chunk["timestamp"], "text": new_text.strip()})
-            if i < len(st.session_state.chunks)-1:
-                st.markdown("<hr style='border-color:rgba(255,255,255,0.04);margin:4px 0'>",
-                            unsafe_allow_html=True)
+        # Fixed-height scrollable grid — 2 columns, compact text inputs
+        with st.container(height=420):
+            col_a, col_b = st.columns(2)
+            for i, chunk in enumerate(st.session_state.chunks):
+                s, e  = chunk["timestamp"]
+                dur   = e - s
+                dot   = "🟢" if dur >= 1.5 else ("🟡" if dur >= 0.8 else "🔴")
+                col   = col_a if i % 2 == 0 else col_b
+                with col:
+                    new_text = st.text_input(
+                        label=f"{dot} #{i+1} · {fmt_dur(s)}→{fmt_dur(e)}",
+                        value=chunk["text"],
+                        key=f"seg_{i}_{st.session_state.session_id}",
+                    )
+                    if new_text.strip() != chunk["text"].strip():
+                        edited = True
+                    updated_chunks.append({"timestamp": chunk["timestamp"], "text": new_text.strip()})
 
         if edited:
             st.markdown("---")
