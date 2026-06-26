@@ -987,7 +987,7 @@ if st.session_state.steps["burn"] and st.session_state.burned_video_path:
             unsafe_allow_html=True,
         )
 
-        # Apply button (only if user changed something manually)
+        # Track whether user changed something (button rendered in video column)
         changed = (
             font_size   != st.session_state.font_size   or
             text_case   != st.session_state.text_case   or
@@ -1000,6 +1000,26 @@ if st.session_state.steps["burn"] and st.session_state.burned_video_path:
             shadow      != st.session_state.shadow      or
             position    != st.session_state.position
         )
+
+    # ── RIGHT: Video ──────────────────────────────────────────────────────────
+    with col_video:
+        st.markdown("### 🎬 Preview")
+        st.video(st.session_state.burned_video_path, format="video/mp4")
+
+        dl_a, dl_b, dl_c = st.columns(3)
+        with dl_a:
+            with open(st.session_state.burned_video_path, "rb") as f:
+                st.download_button("📥 Video", f, file_name="sublyze_output.mp4",
+                                   mime="video/mp4", key="dl_vid", use_container_width=True)
+        with dl_b:
+            if st.session_state.srt_content:
+                st.download_button("📄 SRT", st.session_state.srt_content,
+                                   file_name="sublyze_subtitles.srt", mime="text/plain",
+                                   key="dl_srt", use_container_width=True)
+        with dl_c:
+            if st.button("🔄 New Video", key="start_over", use_container_width=True):
+                st.session_state.clear(); st.rerun()
+
         if changed:
             if st.button("🔥 Apply & Re-burn", use_container_width=True, key="apply_custom"):
                 st.session_state.font_size    = font_size
@@ -1020,25 +1040,6 @@ if st.session_state.steps["burn"] and st.session_state.burned_video_path:
                         st.rerun()
                     except Exception as err:
                         st.error(f"Burn failed: {err}")
-
-    # ── RIGHT: Video ──────────────────────────────────────────────────────────
-    with col_video:
-        st.markdown("### 🎬 Preview")
-        st.video(st.session_state.burned_video_path, format="video/mp4")
-
-        dl_a, dl_b, dl_c = st.columns(3)
-        with dl_a:
-            with open(st.session_state.burned_video_path, "rb") as f:
-                st.download_button("📥 Video", f, file_name="sublyze_output.mp4",
-                                   mime="video/mp4", key="dl_vid", use_container_width=True)
-        with dl_b:
-            if st.session_state.srt_content:
-                st.download_button("📄 SRT", st.session_state.srt_content,
-                                   file_name="sublyze_subtitles.srt", mime="text/plain",
-                                   key="dl_srt", use_container_width=True)
-        with dl_c:
-            if st.button("🔄 New Video", key="start_over", use_container_width=True):
-                st.session_state.clear(); st.rerun()
 
     # ── Subtitle Editor (full-width, below) ───────────────────────────────────
     st.markdown("---")
