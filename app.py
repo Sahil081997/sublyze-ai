@@ -836,7 +836,7 @@ if uploaded_file and not st.session_state.steps["upload"]:
         st.session_state.steps["extract"] = True
     pipeline_ph.markdown(_pipeline_html(), unsafe_allow_html=True)
 
-    with st.spinner("🧠 Transcribing with Whisper AI… (30–60 s on first run)"):
+    with st.spinner("🎧 Listening to every word so you don't have to… hang tight!"):
         transcript, chunks = transcribe_audio(audio_path)
 
     if not transcript.strip():
