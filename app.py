@@ -787,10 +787,10 @@ st.markdown("""
   <div class="hero-sub">Auto-generate burned-in subtitles for any video — free, in one click.</div>
 </div>
 <div class="badge-row">
-  <span class="badge badge-purple">�� Whisper AI</span>
-  <span class="badge badge-blue">⚡ FFmpeg libass</span>
-  <span class="badge badge-green">🎯 One-click</span>
-  <span class="badge badge-pink">✏️ 6 Preset Styles</span>
+  <span class="badge badge-green">✅ 100% Free</span>
+  <span class="badge badge-purple">🌍 99 Languages</span>
+  <span class="badge badge-blue">⚡ No Account Needed</span>
+  <span class="badge badge-pink">📥 Download MP4 + SRT</span>
 </div>""", unsafe_allow_html=True)
 
 if not st.session_state.steps["upload"]:
