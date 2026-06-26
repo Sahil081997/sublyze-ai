@@ -8,6 +8,7 @@ from utils.subtitle_utils import (
     generate_srt, save_srt, burn_subtitles_to_video,
     merge_short_segments, PRESET_STYLES,
 )
+from utils.translation import translate_chunks, TRANSLATION_LANGUAGES
 
 # ── Page config ───────────────────────────────────────────────────────────────
 st.set_page_config(
@@ -242,6 +243,8 @@ def _init_session():
         "srt_path":          None, "srt_content": None,
         "chunks":            None, "transcript":  None,
         "burned_video_path": None,
+        "original_chunks":   None,
+        "active_language":   "Original",
         # style
         "active_preset":  "subtle",
         "font_size":      18,
@@ -871,8 +874,10 @@ if uploaded_file and not st.session_state.steps["upload"]:
 
     # Auto-merge very short segments for readable subtitles
     chunks = merge_short_segments(chunks, min_duration=1.5, min_words=2)
-    st.session_state.transcript = transcript
-    st.session_state.chunks     = chunks
+    st.session_state.transcript     = transcript
+    st.session_state.chunks         = chunks
+    st.session_state.original_chunks = chunks
+    st.session_state.active_language = "Original"
     st.session_state.steps["transcribe"] = True
 
     dur_s = chunks[-1]["timestamp"][1] if chunks else 0
@@ -1067,6 +1072,82 @@ if st.session_state.steps["burn"] and st.session_state.burned_video_path:
 
     # ── Subtitle Editor (full-width, below) ───────────────────────────────────
     st.markdown("---")
+
+    # ── Translate Subtitles ───────────────────────────────────────────────────
+    with st.expander("🌍  Translate Subtitles to Another Language", expanded=False):
+        st.markdown(
+            "<small style='color:#505075'>Pick a language — we'll translate every subtitle "
+            "line and re-burn the video for you.</small>",
+            unsafe_allow_html=True,
+        )
+
+        lang_col, btn_col = st.columns([3, 1])
+        lang_names = list(TRANSLATION_LANGUAGES.keys())
+
+        # Determine default index based on active language
+        default_idx = 0
+        if st.session_state.active_language in lang_names:
+            default_idx = lang_names.index(st.session_state.active_language)
+
+        with lang_col:
+            selected_lang = st.selectbox(
+                "Target language",
+                lang_names,
+                index=default_idx,
+                key="translation_lang_select",
+                label_visibility="collapsed",
+            )
+
+        with btn_col:
+            translate_clicked = st.button(
+                "🌍 Translate & Re-burn",
+                use_container_width=True,
+                key="translate_reburn",
+            )
+
+        # Revert to original option
+        if st.session_state.active_language != "Original":
+            st.markdown(
+                f"<small style='color:#667eea'>Currently showing: "
+                f"<b>{st.session_state.active_language}</b></small>",
+                unsafe_allow_html=True,
+            )
+            if st.button("↩ Revert to Original Language", key="revert_lang"):
+                st.session_state.chunks = st.session_state.original_chunks
+                st.session_state.active_language = "Original"
+                st.session_state.srt_content = generate_srt(
+                    st.session_state.original_chunks,
+                    text_case=st.session_state.text_case,
+                )
+                with st.spinner("Re-burning with original subtitles…"):
+                    try:
+                        burned = _do_burn()
+                        st.session_state.burned_video_path = burned
+                        st.rerun()
+                    except Exception as err:
+                        st.error(f"Burn failed: {err}")
+
+        if translate_clicked:
+            lang_code = TRANSLATION_LANGUAGES[selected_lang]
+            src_chunks = st.session_state.original_chunks or st.session_state.chunks
+            with st.spinner(f"Translating to {selected_lang}… ✍️"):
+                try:
+                    translated = translate_chunks(src_chunks, lang_code)
+                    st.session_state.chunks = translated
+                    st.session_state.active_language = selected_lang
+                    st.session_state.srt_content = generate_srt(
+                        translated, text_case=st.session_state.text_case
+                    )
+                except Exception as err:
+                    st.error(f"Translation failed: {err}")
+                    st.stop()
+            with st.spinner(f"Burning {selected_lang} subtitles into video…"):
+                try:
+                    burned = _do_burn()
+                    st.session_state.burned_video_path = burned
+                    st.rerun()
+                except Exception as err:
+                    st.error(f"Burn failed: {err}")
     with st.expander("✏️  Edit Subtitles  ·  " +
                      f"{len(st.session_state.chunks)} segments", expanded=False):
 
