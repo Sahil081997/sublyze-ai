@@ -180,17 +180,22 @@ video { border-radius:14px !important; box-shadow:0 20px 56px rgba(0,0,0,.6) !im
     font-weight:600 !important;
     font-size:.88rem !important;
     text-align:left !important;
-    padding:10px 14px !important;
+    padding:7px 14px !important;
     width:100% !important;
     transition:background .15s,color .15s !important;
     box-shadow:none !important;
     transform:none !important;
+    margin-bottom:0 !important;
 }
 [data-testid="stSidebar"] .stButton > button:hover {
     background:rgba(102,126,234,0.08) !important;
     color:#c0c8ff !important;
     transform:none !important;
     box-shadow:none !important;
+}
+[data-testid="stSidebar"] div[data-testid="stVerticalBlockBorderWrapper"],
+[data-testid="stSidebar"] div.stVerticalBlock {
+    gap:2px !important;
 }
 
 /* Active nav item — injected via wrapper div with data-active */
@@ -365,13 +370,7 @@ with st.sidebar:
 
     # ── Footer ────────────────────────────────────────────────────────────────
     st.markdown("<hr class='sb-divider'>", unsafe_allow_html=True)
-    st.markdown("""
-<div class="sb-footer-badge">
-  <div class="sb-footer-dot"></div>
-  <span class="sb-footer-text">Whisper AI · Online</span>
-</div>
-<div class="sb-version">v2.0 · Streamlit Cloud</div>
-""", unsafe_allow_html=True)
+    st.markdown('<div class="sb-version">v2.0 · Streamlit Cloud</div>', unsafe_allow_html=True)
 
 page = st.session_state.page
 
