@@ -347,6 +347,7 @@ with st.sidebar:
     # ── Nav buttons ───────────────────────────────────────────────────────────
     nav_items = [
         ("✂️ Editor",  "✂️",  "Editor",  "Create & style subtitles"),
+        ("❓ FAQ",      "❓",  "FAQ",     "Common questions answered"),
         ("🔒 Privacy", "🔒", "Privacy", "How we handle your data"),
     ]
     for page_key, icon, label, desc in nav_items:
@@ -577,7 +578,210 @@ if page == "🔒 Privacy":
     st.stop()
 
 
-# ── Main Editor ───────────────────────────────────────────────────────────────
+# ── FAQ ───────────────────────────────────────────────────────────────────────
+if page == "❓ FAQ":
+    st.markdown("""
+<style>
+.faq-hero { text-align:center; padding:40px 0 28px; }
+.faq-hero-title {
+    font-size:clamp(1.8rem,4vw,2.8rem); font-weight:900;
+    background:linear-gradient(90deg,#667eea 0%,#a855f7 50%,#ec4899 100%);
+    -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+    background-clip:text; line-height:1.2; margin:0 0 10px;
+}
+.faq-hero-sub { color:#7070a0 !important; font-size:1rem; }
+
+.faq-cat-label {
+    font-size:.68rem; font-weight:700; text-transform:uppercase;
+    letter-spacing:.1em; color:#667eea !important;
+    border-bottom:1px solid rgba(102,126,234,.2);
+    padding-bottom:8px; margin:32px 0 4px;
+    display:flex; align-items:center; gap:8px;
+}
+
+/* Expander styling */
+[data-testid="stExpander"] {
+    background:rgba(255,255,255,.025) !important;
+    border:1px solid rgba(255,255,255,.07) !important;
+    border-radius:14px !important;
+    margin-bottom:8px !important;
+    overflow:hidden !important;
+}
+[data-testid="stExpander"]:hover {
+    border-color:rgba(102,126,234,.3) !important;
+}
+[data-testid="stExpander"] summary {
+    font-size:.93rem !important;
+    font-weight:600 !important;
+    color:#c8c8e8 !important;
+    padding:14px 18px !important;
+}
+[data-testid="stExpander"] div[data-testid="stExpanderDetails"] {
+    padding:0 18px 16px !important;
+    color:#7878a0 !important;
+    font-size:.88rem !important;
+    line-height:1.65 !important;
+    border-top:1px solid rgba(255,255,255,.05) !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
+    st.markdown("""
+<div class="faq-hero">
+  <div class="faq-hero-title">❓ Frequently Asked Questions</div>
+  <div class="faq-hero-sub">Everything you need to know about Sublyze AI</div>
+</div>
+""", unsafe_allow_html=True)
+
+    # ── About Sublyze ─────────────────────────────────────────────────────────
+    st.markdown('<div class="faq-cat-label">🎬 About Sublyze AI</div>', unsafe_allow_html=True)
+
+    with st.expander("What is Sublyze AI?"):
+        st.markdown("""
+Sublyze AI is a free, browser-accessible tool that automatically generates and burns subtitles into your videos.
+
+You upload a video, our AI transcribes the speech, and you get back a fully subtitled MP4 — all in one click.
+No account, no credit card, no software to install.
+        """)
+
+    with st.expander("Is Sublyze AI really free?"):
+        st.markdown("""
+Yes — completely free. There are no hidden tiers, watermarks, or paywalls.
+
+Sublyze is powered by **OpenAI Whisper** (open-source) and **FFmpeg** (open-source).
+The only cost is the server running the app, which is hosted on Streamlit Cloud.
+        """)
+
+    with st.expander("How is Sublyze different from other subtitle tools?"):
+        st.markdown("""
+Most online subtitle tools either:
+- Require a paid subscription or add watermarks on the free tier
+- Send your video to a third-party AI API (OpenAI, AssemblyAI, etc.)
+- Only give you an SRT file — you have to burn it yourself
+
+Sublyze does **all three steps in one**: transcribes with a self-hosted Whisper model,
+lets you style the subtitles, and burns them directly into your video — all for free with no data leaving our server to any external AI service.
+        """)
+
+    with st.expander("Do I need to create an account?"):
+        st.markdown("""
+No account needed. Just open the app, upload your video, and go.
+Each visit starts a fresh session — no login, no email, no sign-up.
+        """)
+
+    # ── How it works ──────────────────────────────────────────────────────────
+    st.markdown('<div class="faq-cat-label">⚙️ How It Works</div>', unsafe_allow_html=True)
+
+    with st.expander("What video formats are supported?"):
+        st.markdown("""
+Currently **MP4** and **MOV** are supported, up to **200 MB** in size.
+
+These cover the vast majority of videos from phones, cameras, and screen recorders.
+Support for additional formats (MKV, WebM, AVI) may be added in a future update.
+        """)
+
+    with st.expander("How long does processing take?"):
+        st.markdown("""
+It depends on the length of your video:
+
+| Video length | Approx. time |
+|---|---|
+| < 2 minutes | ~15–30 seconds |
+| 2–10 minutes | ~30–90 seconds |
+| 10–30 minutes | ~2–5 minutes |
+
+The first run may take slightly longer as the Whisper model warms up.
+        """)
+
+    with st.expander("What languages are supported?"):
+        st.markdown("""
+Whisper supports **99 languages** including English, Spanish, French, German, Hindi,
+Portuguese, Arabic, Chinese, Japanese, Korean, and many more.
+
+Language is detected **automatically** — you don't need to set it manually.
+        """)
+
+    with st.expander("How accurate is the transcription?"):
+        st.markdown("""
+Sublyze uses **Whisper small**, which delivers strong accuracy for clear speech in a quiet environment.
+
+Accuracy may be lower for:
+- Heavy accents or very fast speech
+- Multiple overlapping speakers
+- Low audio quality or heavy background noise
+
+For professional use cases needing higher accuracy, upgrading to Whisper `medium` or `large` would improve results.
+        """)
+
+    # ── Subtitles & Styling ────────────────────────────────────────────────────
+    st.markdown('<div class="faq-cat-label">✏️ Subtitles & Styling</div>', unsafe_allow_html=True)
+
+    with st.expander("Can I edit the subtitles before burning?"):
+        st.markdown("""
+Yes! After transcription, scroll down to the **Edit Subtitles** expander.
+
+You can:
+- Edit the text of any segment directly
+- Merge short segments into longer, more readable lines
+- Click **Re-burn with Edits** to apply your changes to the video
+        """)
+
+    with st.expander("What subtitle styles are available?"):
+        st.markdown("""
+Sublyze includes **6 one-click preset styles**:
+
+| Style | Look |
+|---|---|
+| 🎬 Subtle | Semi-transparent box — Netflix / YouTube style |
+| 💥 Bold | Thick stroke, all-caps — TikTok / Shorts |
+| 🎥 Cinematic | Thin outline, no background — classic film |
+| ✨ Neon | Bold yellow on dark — social media pop |
+| 📰 News | Solid black block — broadcast style |
+| 🤍 Minimal | Drop shadow only — clean, no background |
+
+You can also fully customize font size, text color, background, stroke, shadow, and position.
+        """)
+
+    with st.expander("Can I download just the .SRT subtitle file?"):
+        st.markdown("""
+Yes. After processing, use the **📄 SRT** download button to get a standard `.srt` file.
+
+This file can be imported into any video editor (Premiere Pro, DaVinci Resolve, CapCut)
+or uploaded directly to YouTube, Vimeo, or any video platform that accepts subtitle tracks.
+        """)
+
+    with st.expander("Can I reposition the subtitles?"):
+        st.markdown("""
+Yes — open the **Shadow & Position** panel and choose **Bottom**, **Center**, or **Top**.
+
+Bottom is the default and most widely used position for readability.
+        """)
+
+    # ── Privacy & Data ─────────────────────────────────────────────────────────
+    st.markdown('<div class="faq-cat-label">🔒 Privacy & Data</div>', unsafe_allow_html=True)
+
+    with st.expander("Is my video stored on your servers?"):
+        st.markdown("""
+No. Your video is held in a **temporary session folder** only for the duration of processing.
+Once your session ends, all files (video, WAV audio, SRT, burned MP4) are discarded.
+
+We do not store, log, or archive any user videos. See the [Privacy page](#) for full details.
+        """)
+
+    with st.expander("Do you use my video or transcript to train AI models?"):
+        st.markdown("""
+**Never.** Your audio and transcripts are not used to fine-tune, retrain, or improve any AI model —
+including Whisper. The model runs inference only; your data is input, not training material.
+        """)
+
+    with st.expander("Does Sublyze send my video to OpenAI or any external API?"):
+        st.markdown("""
+No. Whisper runs **locally on our server** — it is the open-source model, not the OpenAI API.
+Your audio never leaves our infrastructure and is never transmitted to OpenAI, Google, or any other third party.
+        """)
+
+    st.markdown("<div style='margin-top:48px'></div>", unsafe_allow_html=True)
+    st.stop()
 st.markdown("""
 <div style="padding:20px 0 6px">
   <div class="hero-title">Sublyze AI</div>
