@@ -1145,9 +1145,6 @@ elif st.session_state.steps["subtitle"] and not st.session_state.steps["burn"]:
 # ── Footer ────────────────────────────────────────────────────────────────────
 st.markdown("""
 <div class="footer">
-  Built with ❤️ using
-  <a href="https://openai.com/research/whisper" target="_blank">OpenAI Whisper</a>,
-  <a href="https://ffmpeg.org" target="_blank">FFmpeg</a> &amp;
-  <a href="https://streamlit.io" target="_blank">Streamlit</a> ·
+  Made with ❤️ by <a href="https://www.linkedin.com/in/sahilmaurya/" target="_blank">Sahil Maurya</a> &nbsp;·&nbsp;
   <a href="https://github.com/Sahil081997/sublyze-ai" target="_blank">⭐ GitHub</a>
 </div>""", unsafe_allow_html=True)
